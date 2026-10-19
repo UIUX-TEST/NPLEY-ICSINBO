@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="NPLEY × 인천신용보증재단 홈페이지 개편 분석 및 제안">
+<meta property="og:title" content="2026 인천신용보증재단 홈페이지 개편 분석 및 제안">
+<meta property="og:image" content="assets/s01.png">
+<title>인천신용보증재단 개편 제안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 16:9 stage; each slide = base image (title area blanked) + title rows cropped from the original, revealed by GSAP */
+:root{
+  --bg:#000d1f; --slide:#001633; --chrome:#001633; --line:#10305a; --fg:#f2f5fa; --muted:#7f93b3; --accent:#E8613A;
+  --ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--ui);overflow:hidden;-webkit-font-smoothing:antialiased}
+.app{height:100%;display:grid;grid-template-rows:1fr auto;padding-inline:16px;box-sizing:border-box}
+.stage-wrap{display:grid;place-items:center;min-height:0;padding-block:16px 10px}
+.stage{position:relative;width:min(100%, calc((100vh - 96px) * 16 / 9));aspect-ratio:16/9;max-width:100%;background:var(--slide);overflow:hidden;
+  box-shadow:0 0 0 1px var(--line);touch-action:pan-y;cursor:pointer;user-select:none;-webkit-user-select:none}
+.sl{position:absolute;inset:0;visibility:hidden}
+.base{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none;will-change:transform,opacity}
+.mask,.ly{position:absolute;overflow:hidden;contain:paint}
+.ly{overflow:visible;contain:none;will-change:transform,opacity}
+.inner{position:absolute;inset:0;background-repeat:no-repeat;will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+
+.bar{display:flex;align-items:center;gap:14px;padding-block:10px 14px;max-width:calc((100vh - 96px) * 16 / 9);width:100%;margin-inline:auto;box-sizing:border-box}
+.count{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.count b{color:var(--fg);font-weight:500}
+.meta{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;overflow:hidden;height:36px;justify-content:center}
+.chap{font-size:11px;letter-spacing:.08em;color:var(--accent);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{position:relative;height:2px;background:var(--line);flex:2;min-width:60px}
+.track i{position:absolute;inset:0 auto 0 0;width:0;background:var(--accent)}
+.btns{display:flex;gap:6px}
+button{font:inherit;color:var(--fg);background:var(--chrome);border:1px solid var(--line);height:34px;min-width:34px;padding:0 10px;border-radius:6px;cursor:pointer;display:inline-grid;place-items:center;font-size:13px}
+button:hover{border-color:#2d5a98}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+
+.grid{position:fixed;inset:0;background:rgba(0,13,31,.97);z-index:10;overflow:auto;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.grid[hidden]{display:none}
+.grid-head{max-width:1200px;margin:0 auto 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.grid-head h2{margin:0;font-size:16px;font-weight:700}
+.grid-list{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.thumb{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:8px}
+.thumb img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;box-shadow:0 0 0 1px var(--line);transition:box-shadow .2s}
+.thumb:hover img,.thumb:focus-visible img,.thumb.on img{box-shadow:0 0 0 2px var(--accent)}
+.thumb span{font-size:12px;color:var(--muted);display:flex;gap:8px}
+.thumb span em{font-style:normal;font-family:var(--mono);color:var(--fg)}
+.hint{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--fg)}
+@media (max-width:640px){.track,.hint-k{display:none}.name{font-size:13px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage-wrap">
+    <div class="stage" id="stage" aria-roledescription="carousel" aria-label="제안서 슬라이드" tabindex="0"></div>
+  </div>
+  <div class="bar">
+    <div class="count"><b id="cur">01</b> / <span id="tot">16</span></div>
+    <div class="meta"><div class="chap" id="chap"></div><div class="name" id="name"></div></div>
+    <div class="track" aria-hidden="true"><i id="prog"></i></div>
+    <div class="btns">
+      <button id="prev" aria-label="이전 장"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button id="next" aria-label="다음 장"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button id="gridBtn" aria-label="전체 장표 보기"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg></button>
+      <button id="fsBtn" aria-label="전체 화면"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="grid" id="grid" hidden>
+  <div class="grid-head">
+    <h2>전체 장표</h2>
+    <span class="hint"><span class="hint-k"><kbd>←</kbd> <kbd>→</kbd> 넘기기 · <kbd>G</kbd> 전체 보기 · <kbd>F</kbd> 전체 화면</span><button id="gridClose">닫기</button></span>
+  </div>
+  <div class="grid-list" id="gridList"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+/* x:[x0,x1] title-block columns · rows:[y0,y1] bands (ghost word / eyebrow / headline lines) · desc:[x0,y0,x1,y1] side copy · all in 1280×720 space */
+const SLIDES=[{"c":"표지","t":"인천신용보증재단 홈페이지 개편 분석 및 제안","img":"assets/s01.png","base":"assets/b01.png","x":[40,1240],"rows":[[0,88],[88,116],[116,228],[228,345]],"desc":[]},{"c":"회사 소개","t":"NPLEY Way","img":"assets/s02.png","base":"assets/b02.png","x":[40,705],"rows":[[25,70],[70,100],[100,153],[153,205],[205,262]],"desc":[[830,205,1222,278]]},{"c":"회사 소개","t":"왜 엔플레이인가","img":"assets/s03.png","base":"assets/b03.png","x":[40,965],"rows":[[35,132],[132,165],[165,232],[232,298]],"desc":[]},{"c":"회사 소개","t":"금융 레퍼런스","img":"assets/s04.png","base":"assets/b04.png","x":[50,990],"rows":[[20,118],[118,146],[146,215]],"desc":[]},{"c":"제안 목표","t":"프로젝트 이해","img":"assets/s05.png","base":"assets/b05.png","x":[40,470],"rows":[[35,148],[148,176],[176,228],[228,280],[280,328]],"desc":[[60,348,455,452]]},{"c":"제안 목표","t":"공공·금융 웹 디자인 컨설팅","img":"assets/s06.png","base":"assets/b06.png","x":[40,640],"rows":[[30,146],[146,176],[176,227],[227,285]],"desc":[[690,181,1222,263]]},{"c":"현행 진단","t":"메뉴 구조","img":"assets/s07.png","base":"assets/b07.png","x":[40,535],"rows":[[30,146],[146,176],[176,227],[227,285]],"desc":[[936,181,1222,263]]},{"c":"현행 진단","t":"메인 화면","img":"assets/s08.png","base":"assets/b08.png","x":[40,580],"rows":[[30,146],[146,176],[176,227],[227,285]],"desc":[[947,181,1222,263]]},{"c":"현행 진단","t":"이용자 여정","img":"assets/s09.png","base":"assets/b09.png","x":[40,690],"rows":[[30,146],[146,176],[176,227],[227,285]],"desc":[[921,181,1222,263]]},{"c":"현행 진단","t":"핵심 과제","img":"assets/s10.png","base":"assets/b10.png","x":[40,585],"rows":[[30,146],[146,176],[176,227],[227,285]],"desc":[]},{"c":"개선 방향","t":"개편 전략","img":"assets/s11.png","base":"assets/b11.png","x":[40,705],"rows":[[30,146],[146,176],[176,227],[227,285]],"desc":[[1009,181,1222,263]]},{"c":"개선 방향","t":"메인 화면 방향 3안","img":"assets/s12.png","base":"assets/b12.png","x":[40,845],"rows":[[30,146],[146,176],[176,227],[227,285]],"desc":[[929,181,1222,263]]},{"c":"수행 방안","t":"개편 범위별 제안","img":"assets/s13.png","base":"assets/b13.png","x":[40,590],"rows":[[30,146],[146,176],[176,235]],"desc":[]},{"c":"수행 방안","t":"범위·견적 비교","img":"assets/s14.png","base":"assets/b14.png","x":[40,520],"rows":[[30,146],[146,176],[176,235]],"desc":[]},{"c":"추진 일정","t":"일정(안)","img":"assets/s15.png","base":"assets/b15.png","x":[40,725],"rows":[[30,146],[146,176],[176,235]],"desc":[]},{"c":"회신","t":"Contact","img":"assets/s16.png","base":"assets/b16.png","x":[70,1210],"rows":[[240,415]],"desc":[]}];
+const W=1280,H=720,$=id=>document.getElementById(id),pad=n=>String(n).padStart(2,'0');
+const stage=$('stage');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pc=(v,t)=>(v/t*100)+'%';
+
+// crop a rectangle of the original slide image into a positioned layer
+function crop(img,x0,y0,x1,y1){
+  const w=x1-x0,h=y1-y0,el=document.createElement('div');
+  el.className='inner';
+  Object.assign(el.style,{backgroundImage:`url(${img})`,backgroundSize:`${W/w*100}% ${H/h*100}%`,
+    backgroundPosition:`${w===W?0:x0/(W-w)*100}% ${h===H?0:y0/(H-h)*100}%`});
+  return el;
+}
+function place(el,x0,y0,x1,y1){Object.assign(el.style,{left:pc(x0,W),top:pc(y0,H),width:pc(x1-x0,W),height:pc(y1-y0,H)})}
+
+$('tot').textContent=pad(SLIDES.length);
+const S=SLIDES.map((s,i)=>{
+  const sec=document.createElement('section');sec.className='sl';sec.setAttribute('aria-label',`${pad(i+1)} ${s.t}`);
+  const base=new Image();base.className='base';base.src=s.base;base.alt='';base.decoding='async';sec.appendChild(base);
+  const [x0,x1]=s.x,single=s.rows.length===1;
+  const ghost=[],eye=[],title=[],desc=[];
+  s.rows.forEach(([y0,y1],k)=>{
+    const m=document.createElement('div');m.className='mask';place(m,x0,y0,x1,y1);
+    const inn=crop(s.img,x0,y0,x1,y1);m.appendChild(inn);sec.appendChild(m);
+    (single?title:k===0?ghost:k===1?eye:title).push(inn);
+  });
+  s.desc.forEach(([a,b,c,d])=>{
+    const l=document.createElement('div');l.className='ly';place(l,a,b,c,d);
+    const inn=crop(s.img,a,b,c,d);l.appendChild(inn);sec.appendChild(l);desc.push(inn);
+  });
+  stage.appendChild(sec);return {sec,base,ghost,eye,title,desc};
+});
+
+let idx=-1,tl=null;
+function meta(i){
+  $('cur').textContent=pad(i+1);
+  gsap.to('#prog',{width:((i+1)/SLIDES.length*100)+'%',duration:reduce?0:.8,ease:'power3.out'});
+  const m=[$('chap'),$('name')];
+  const set=()=>{$('chap').textContent=SLIDES[i].c;$('name').textContent=SLIDES[i].t;};
+  if(reduce||idx<0){set();}
+  else gsap.timeline().to(m,{yPercent:-60,autoAlpha:0,duration:.22,ease:'power2.in',stagger:.03,onComplete:set})
+    .fromTo(m,{yPercent:60},{yPercent:0,autoAlpha:1,duration:.5,ease:'power3.out',stagger:.05});
+  try{history.replaceState(null,'','#s'+(i+1))}catch(e){}
+  document.querySelectorAll('.thumb').forEach((t,k)=>t.classList.toggle('on',k===i));
+}
+
+// enter: base settles, ghost word drifts in, eyebrow lifts, headline lines rise out of their masks, side copy follows
+function enter(s,dir,at,t){
+  t.set(s.sec,{visibility:'visible',zIndex:2},at)
+   .set(s.title,{yPercent:dir>0?105:-105,autoAlpha:0},at)
+   .fromTo(s.base,{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:1.0,ease:'power2.out'},at)
+   .fromTo(s.ghost,{autoAlpha:0,xPercent:4*dir,yPercent:12},{autoAlpha:1,xPercent:0,yPercent:0,duration:1.3,ease:'power3.out',stagger:.06},at+.05)
+   .fromTo(s.eye,{autoAlpha:0,yPercent:60},{autoAlpha:1,yPercent:0,duration:.7,ease:'power3.out'},at+.18)
+   .to(s.title,{yPercent:0,autoAlpha:1,duration:.95,ease:'expo.out',stagger:.09},at+.26)
+   .fromTo(s.desc,{autoAlpha:0,y:'1.2vh'},{autoAlpha:1,y:0,duration:.8,ease:'power3.out',stagger:.06},at+.5);
+}
+function leave(s,dir,t){
+  t.set(s.sec,{zIndex:1},0)
+   .to(s.title,{yPercent:dir>0?-105:105,autoAlpha:0,duration:.4,ease:'power2.in',stagger:.04},0)
+   .to([...s.eye,...s.desc],{autoAlpha:0,y:'-1vh',duration:.3,ease:'power2.in'},0)
+   .to(s.ghost,{autoAlpha:0,xPercent:-3*dir,duration:.45,ease:'power2.in'},0)
+   .to(s.base,{autoAlpha:0,scale:.99,duration:.5,ease:'power2.inOut'},.1)
+   .set(s.sec,{visibility:'hidden'})
+   .set([s.base,...s.ghost,...s.eye,...s.desc,...s.title],{clearProps:'transform,opacity,visibility'});
+}
+function go(to){
+  if(to<0||to>=SLIDES.length||to===idx)return;
+  if(tl&&tl.isActive())tl.progress(1);
+  const dir=to>idx?1:-1,from=idx;
+  meta(to);idx=to;
+  if(reduce){
+    if(from>=0)gsap.set(S[from].sec,{visibility:'hidden'});
+    gsap.set(S[to].sec,{visibility:'visible'});
+    gsap.fromTo(S[to].sec,{autoAlpha:0},{autoAlpha:1,duration:.3});return;
+  }
+  tl=gsap.timeline();
+  let at=0;
+  if(from>=0){leave(S[from],dir,tl);at=.38;}
+  enter(S[to],dir,at,tl);
+}
+
+const h=parseInt((location.hash||'').replace('#s',''),10);
+go(h>=1&&h<=SLIDES.length?h-1:0);
+
+$('next').onclick=()=>go(idx+1);$('prev').onclick=()=>go(idx-1);
+stage.addEventListener('click',e=>{const r=stage.getBoundingClientRect();go(e.clientX-r.left<r.width*.3?idx-1:idx+1)});
+let sx=null;
+stage.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+stage.addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40)go(dx<0?idx+1:idx-1);sx=null},{passive:true});
+
+const grid=$('grid'),list=$('gridList');
+SLIDES.forEach((s,i)=>{const b=document.createElement('button');b.className='thumb';b.type='button';
+  b.innerHTML=`<img alt="" loading="lazy" src="${s.img}"><span><em>${pad(i+1)}</em>${s.t}</span>`;
+  b.onclick=()=>{closeGrid();setTimeout(()=>go(i),reduce?0:200)};list.appendChild(b);});
+function openGrid(){grid.hidden=false;document.querySelectorAll('.thumb').forEach((t,k)=>t.classList.toggle('on',k===idx));
+  if(!reduce)gsap.from('.thumb',{y:16,autoAlpha:0,stagger:.03,duration:.45,ease:'power3.out'});list.children[idx]?.focus()}
+function closeGrid(){grid.hidden=true;stage.focus()}
+$('gridBtn').onclick=openGrid;$('gridClose').onclick=closeGrid;
+$('fsBtn').onclick=()=>{if(document.fullscreenElement){document.exitFullscreen?.().catch(()=>{})}else{document.documentElement.requestFullscreen?.().catch(()=>{})}};
+
+addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key;
+  if(!grid.hidden){if(k==='Escape'||k==='g'||k==='G'){e.preventDefault();closeGrid()}return}
+  if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].includes(k)){e.preventDefault();go(idx+1)}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(k)){e.preventDefault();go(idx-1)}
+  else if(k==='Home')go(0);else if(k==='End')go(SLIDES.length-1);
+  else if(k==='g'||k==='G')openGrid();else if(k==='f'||k==='F')$('fsBtn').click();
+});
+</script>
+</body>
+</html>
